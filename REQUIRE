@@ -1,1 +1,5 @@
 julia 0.5
+RigidBodyDynamics 0.2.0
+RigidBodyTreeInspector 0.1.1 # TODO: update version
+SymPy 0.5.1
+IJulia
