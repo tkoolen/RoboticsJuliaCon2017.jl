@@ -3,6 +3,33 @@ module RoboticsJuliaCon2017
 using RigidBodyDynamics
 using StaticArrays
 
+using CoordinateTransformations
+using GeometryTypes
+using DrakeVisualizer
+using RigidBodyTreeInspector
+
+export visualize!, create_fourbar
+
+function visualize!(vis::Visualizer, mechanism::Mechanism, frame::CartesianFrame3D; scale = 1., tube = false)
+    add_geometry_at_frame!(vis, mechanism, frame, Triad(scale, tube))
+end
+
+function visualize!(vis::Visualizer, mechanism::Mechanism, point::Point3D; radius = 0.1)
+    add_geometry_at_frame!(vis, mechanism, point.frame, HyperSphere(Point(point.v), radius))
+end
+
+function add_geometry_at_frame!(vis::Visualizer, mechanism::Mechanism, frame::CartesianFrame3D, geometry)
+    body = RigidBodyDynamics.body_fixed_frame_to_body(mechanism, frame)
+    defs = RigidBodyDynamics.frame_definitions(body)
+    geomframe = defs[findfirst(tf -> name(tf.from) == "geometry", defs)].from
+    framesym = RigidBodyTreeInspector.to_link_name(geomframe)
+    framevis = vis[framesym][RigidBodyTreeInspector.to_link_name(frame)]
+    setgeometry!(framevis, geometry)
+    tf = fixed_transform(body, frame, geomframe)
+    settransform!(framevis, convert(AffineMap, tf))
+    nothing
+end
+
 function create_fourbar{T}(::Type{T})
     # gravitational acceleration
     g = -9.81
